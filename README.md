@@ -1,4 +1,4 @@
-# Cite42 MCP server
+# Cite42: AI visibility and SEO data MCP server
 
 [![npm](https://img.shields.io/npm/v/@cite42/mcp)](https://www.npmjs.com/package/@cite42/mcp)
 [![CI](https://github.com/Cite42/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Cite42/mcp/actions/workflows/ci.yml)
