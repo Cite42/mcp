@@ -1,0 +1,4 @@
+node_modules/
+dist/
+# Inspector catalog, API keys, and OAuth state are local to this checkout.
+.inspector/

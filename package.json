@@ -1,0 +1,88 @@
+{
+  "name": "@cite42/mcp",
+  "mcpName": "dev.cite42/mcp",
+  "version": "0.8.0",
+  "description": "Cite42 MCP server: AI visibility and SEO data for AI agents. See how the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, mention your brand and which sources they cite, with SEO keyword data, Google, Reddit and YouTube trends, and weekly or monthly trackers that watch a list of prompts over time. Works with Claude Code, Claude Desktop, Codex CLI, Cursor, and any MCP client.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "cite42-mcp": "dist/stdio.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && chmod +x dist/stdio.mjs",
+    "dev": "tsup --watch",
+    "inspect": "npm run build && node scripts/inspect.mjs",
+    "test:stdio": "npm run build && node --test tests/stdio.test.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run audit:security",
+    "audit:security": "npm audit --omit=dev --audit-level=high"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.68.0",
+    "@mastra/mcp": "^1.18.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/node": "^22.19.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "modelcontextprotocol",
+    "cite42",
+    "ai-search",
+    "ai-seo",
+    "geo",
+    "generative-engine-optimization",
+    "ai-visibility",
+    "ai-citations",
+    "brand-monitoring",
+    "seo",
+    "keywords",
+    "keyword-research",
+    "trends",
+    "google-trends",
+    "chatgpt",
+    "claude",
+    "perplexity",
+    "gemini",
+    "claude-code",
+    "cursor",
+    "reddit",
+    "youtube",
+    "ai-visibility-tracking",
+    "rank-tracking",
+    "scheduled-monitoring"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "author": "Cite42 <support@cite42.dev> (https://www.cite42.dev)",
+  "homepage": "https://www.cite42.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cite42/mcp.git"
+  },
+  "bugs": {
+    "email": "support@cite42.dev",
+    "url": "https://www.cite42.dev/app/support"
+  },
+  "overrides": {
+    "esbuild": "^0.28.2",
+    "@modelcontextprotocol/client": "2.3.1"
+  }
+}

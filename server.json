@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.cite42/mcp",
+  "title": "Cite42",
+  "description": "AI visibility and SEO data for AI agents: citations, keywords, trends, and scheduled trackers.",
+  "websiteUrl": "https://www.cite42.dev",
+  "repository": {
+    "url": "https://github.com/Cite42/mcp",
+    "source": "github"
+  },
+  "version": "0.8.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.cite42.dev"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@cite42/mcp",
+      "version": "0.8.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CITE42_API_KEY",
+          "description": "Cite42 API key (create one at https://www.cite42.dev/app/keys)",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "CITE42_API_BASE",
+          "description": "Override the Cite42 API base URL (default: https://www.cite42.dev/api/v1)",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
