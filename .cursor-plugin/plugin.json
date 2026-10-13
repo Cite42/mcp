@@ -7,7 +7,20 @@
     "name": "Cite42",
     "email": "support@cite42.dev"
   },
+  "homepage": "https://www.cite42.dev",
+  "repository": "https://github.com/Cite42/mcp",
   "license": "MIT",
-  "keywords": ["mcp", "ai-visibility", "seo", "geo", "ai-citations", "brand-monitoring", "keyword-research", "google-trends", "chatgpt", "perplexity"],
+  "keywords": [
+    "mcp",
+    "ai-visibility",
+    "seo",
+    "geo",
+    "ai-citations",
+    "brand-monitoring",
+    "keyword-research",
+    "google-trends",
+    "chatgpt",
+    "perplexity"
+  ],
   "logo": "assets/logo.svg"
 }
