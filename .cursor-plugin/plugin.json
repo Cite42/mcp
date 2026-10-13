@@ -1,0 +1,13 @@
+{
+  "name": "cite42",
+  "displayName": "Cite42",
+  "version": "1.0.0",
+  "description": "AI visibility and SEO data for AI agents. See whether ChatGPT, Claude, Perplexity and Gemini mention your brand and which sources they cite, plus keyword search volume and Google Trends.",
+  "author": {
+    "name": "Cite42",
+    "email": "support@cite42.dev"
+  },
+  "license": "MIT",
+  "keywords": ["mcp", "ai-visibility", "seo", "geo", "ai-citations", "brand-monitoring", "keyword-research", "google-trends", "chatgpt", "perplexity"],
+  "logo": "assets/logo.svg"
+}

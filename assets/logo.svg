@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="Cite42">
+  <!--
+    Favicon: the Cite42 mark on the brand-dark background so it stays visible on
+    light browser tab bars (the bare logo.svg uses white fills on transparent and
+    would disappear). Same geometry as public/logo.svg.
+  -->
+  <defs>
+    <mask id="slash">
+      <rect width="40" height="40" fill="#fff" />
+      <line x1="34" y1="6" x2="22" y2="18" stroke="#000" stroke-width="2.4" stroke-linecap="round" />
+    </mask>
+  </defs>
+  <!-- brand-dark rounded background -->
+  <rect width="40" height="40" rx="9" fill="#0a0a0a" />
+  <!-- tall anchor rectangle (left) -->
+  <rect x="5" y="5" width="13" height="30" rx="3.2" fill="#fafafa" />
+  <!-- wide rectangle (lower right) -->
+  <rect x="21" y="22" width="14" height="13" rx="3.2" fill="#fafafa" />
+  <!-- brand-blue square (upper right) with diagonal slash -->
+  <rect x="21" y="5" width="14" height="14" rx="3.2" fill="#0066ff" mask="url(#slash)" />
+</svg>
