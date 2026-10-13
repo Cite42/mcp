@@ -2,9 +2,9 @@
 
 [![npm](https://img.shields.io/npm/v/@cite42/mcp)](https://www.npmjs.com/package/@cite42/mcp)
 [![CI](https://github.com/Cite42/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Cite42/mcp/actions/workflows/ci.yml)
-[![Cite42 MCP connector – tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.cite42/mcp/badges/score.svg)](https://glama.ai/mcp/connectors/dev.cite42/mcp)
+[![Cite42 MCP connector: tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.cite42/mcp/badges/score.svg)](https://glama.ai/mcp/connectors/dev.cite42/mcp)
 
-Cite42 is an MCP server for AI visibility and SEO data. Connect it to Claude Code, Codex, Cursor, Claude Desktop or ChatGPT, and your agent can check whether the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, mention your brand and which sources they cite. It also pulls keyword search volume, Google Trends, Reddit and YouTube data.
+Cite42 is an MCP server for AI visibility and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
 
 You pay per call from a prepaid USD balance. There is no subscription, and new accounts get $1 of free credit. See [pricing](https://www.cite42.dev/pricing).
 
@@ -16,7 +16,7 @@ Ask a buyer question such as "best invoicing software for freelancers" and see w
 
 ### See which sources AI answers cite
 
-`cite42_citations` lists the URLs the AI models cited for a question and can check whether your page or domain is among them. `cite42_search` returns each model's full answer with its sources. `cite42_recommendations` compares your page with the pages that did get cited.
+`cite42_citations` lists the URLs the AI models cited for a question and can check whether your page or domain is among them. For the full text, `cite42_search` returns each model's answer with its sources. `cite42_recommendations` then compares your page with up to two of the cited pages.
 
 ### Keyword search volume, CPC and competition
 
@@ -32,7 +32,7 @@ Ask a buyer question such as "best invoicing software for freelancers" and see w
 
 ### Track prompts weekly or monthly
 
-A tracker reruns a list of up to 30 prompts on a schedule and keeps the run history, so you can see when AI answers start or stop naming you.
+A tracker reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand.
 
 ### Run research workflows in one call
 
