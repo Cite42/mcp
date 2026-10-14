@@ -1,7 +1,7 @@
 {
   "name": "@cite42/mcp",
   "mcpName": "dev.cite42/mcp",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Cite42 MCP server: AI visibility and SEO data for AI agents. See how the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, mention your brand and which sources they cite, with SEO keyword data, Google, Reddit and YouTube trends, and weekly or monthly trackers that watch a list of prompts over time. Works with Claude Code, Claude Desktop, Codex CLI, Cursor, and any MCP client.",
   "license": "MIT",
   "type": "module",
