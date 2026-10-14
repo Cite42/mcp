@@ -155,6 +155,52 @@ After connecting or restarting, just ask in plain language. Your agent picks the
 
 That is the three default surfaces; ask for `fullSweep` to add Claude and Google AI Overviews. The exact brands and sources change by query and model. A good result should show the tool used, model/source evidence, and a short summary you can act on.
 
+## FAQ
+
+### What is AI visibility?
+
+AI visibility is how often AI assistants such as ChatGPT, Claude, Perplexity and Gemini name or cite your brand when people ask questions about your category. Cite42 measures it by asking the AI models the questions your buyers ask and recording which brands and sources come back.
+
+### How do I check whether ChatGPT mentions my brand?
+
+[Connect Cite42](#installation) to your agent and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which asks the AI models behind ChatGPT, Perplexity and Gemini and reports which brands each answer names, in what order and how often. Ask for a full sweep to add Claude and Google AI Overviews.
+
+### Can I check AI visibility without a monthly subscription?
+
+Yes. Cite42 charges per call from a prepaid USD balance, and there is no subscription. New accounts get $1 of free credit. Checking your balance, prices and usage is free.
+
+### How much does a check cost?
+
+A rankings or citations check costs $0.13 on the three default surfaces (ChatGPT $0.05, Gemini $0.05, Perplexity $0.03) and $0.20 with all five. Failed calls are not charged. Ask your agent to run `cite42_pricing` for the current prices of every tool, or see [cite42.dev/pricing](https://www.cite42.dev/pricing).
+
+### Which AI models does it check?
+
+ChatGPT, Perplexity and Gemini by default. A full sweep adds Claude and Google AI Overviews, and you can also choose the models for each call.
+
+### Are the answers live?
+
+Each answer comes from a real call to that AI model. Cite42 caches answers for 24 hours, shared across customers, so an identical prompt on the same surface can return an answer from up to a day earlier. Scheduled tracker runs are a week or a month apart, so they always fall outside that window.
+
+### Can I track AI visibility over time?
+
+Yes. A tracker reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand. Creating, updating and pausing a tracker is free. Each run bills every prompt at the normal price. See [Trackers](#trackers).
+
+### Do I need an API key?
+
+Not for the hosted server at `https://mcp.cite42.dev`, where you sign in with your Cite42 account in the browser. You only need a key to run this npm package, for example in CI or on a server without a browser.
+
+### Which AI clients does it work with?
+
+Claude Code, Codex, Cursor, Claude Desktop, Claude.ai and ChatGPT. Other clients that support remote MCP servers with OAuth, or local stdio servers, should work too.
+
+### Can I use it without an AI agent?
+
+Yes. The same tools are available as a REST API. See the [REST API docs](https://www.cite42.dev/docs/api).
+
+### Is it open source?
+
+This MCP client is MIT licensed. The data comes from the hosted Cite42 API, which is not open source.
+
 ## Tools
 
 Cite42 exposes 29 MCP tools: 4 free account tools (including the compatibility alias), 11 data/report tools, 6 research workflows, and 8 tracker tools.
