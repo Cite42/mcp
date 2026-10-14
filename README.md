@@ -157,13 +157,13 @@ That is the three default surfaces; ask for `fullSweep` to add Claude and Google
 
 ## FAQ
 
-### What is AI visibility?
+### Is there an MCP server for AI visibility?
 
-AI visibility is how often AI assistants such as ChatGPT, Claude, Perplexity and Gemini name or cite your brand when people ask questions about your category. Cite42 measures it by asking the AI models the questions your buyers ask and recording which brands and sources come back.
+Yes. AI visibility is how often AI assistants name or cite your brand when people ask about your category, and Cite42 is an MCP server that measures it. Connect it to Claude Code, Codex, Cursor, Claude Desktop, Claude.ai or ChatGPT, and your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, the questions your buyers ask and see which brands and sources come back.
 
 ### How can I track my brand's visibility in ChatGPT and other AI search engines?
 
-[Connect Cite42](#installation) to your agent and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which asks the AI models behind ChatGPT, Perplexity and Gemini and reports which brands each answer names, in what order and how often. Ask for a full sweep to add Claude and Google AI Overviews. To follow it over time, a [tracker](#trackers) reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand.
+[Connect Cite42](#installation) and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which reports which brands each answer names, in what order and how often. It checks ChatGPT, Perplexity and Gemini by default; ask for a full sweep to add Claude and Google AI Overviews. To follow it over time, a [tracker](#trackers) reruns up to 30 prompts every week or month and keeps the history.
 
 ### How can I see which websites ChatGPT, Claude and Perplexity cite?
 
@@ -173,29 +173,25 @@ AI visibility is how often AI assistants such as ChatGPT, Claude, Perplexity and
 
 Cite42 doesn't change what AI models say, but it shows you where to work. AI answers draw on the pages they cite, so start by finding those pages with `cite42_citations`. `cite42_recommendations` then compares your page with up to two of the cited pages and suggests changes, and a tracker shows whether your brand starts to appear.
 
-### Can I do keyword research with real search volume in ChatGPT or Claude?
+### Is there an MCP server for keyword research with real search volume?
 
-Yes. With Cite42 connected, ask your agent for a keyword's search volume and it calls `cite42_keywords`, which returns monthly search volume, CPC and competition, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call. This works in Claude Code, Claude Desktop, ChatGPT, Codex and Cursor.
+Yes. Ask your agent for a keyword's search volume and it calls `cite42_keywords`, which returns monthly search volume, CPC and competition, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call.
 
-### Can I get Google Trends data in Claude or ChatGPT?
+### Is there a Google Trends MCP server?
 
-Yes. `cite42_trends` returns Google Trends interest over time, related and rising queries, and a trend label, so you can ask "Is interest in 'ai seo' rising?" and get an answer from the data.
+Yes. `cite42_trends` returns Google Trends interest over time, related and rising queries, and a trend label, so you can ask "Is interest in 'ai seo' rising?" and get an answer from the data. `cite42_reddit_trends` and `cite42_youtube_trends` cover Reddit discussions and rising YouTube videos.
 
 ### How do I find content gaps between AI answers and keyword demand?
 
-`cite42_find_content_opportunities` combines AI answers, keyword demand, Google Trends, Reddit, YouTube and citations in one call to find topics you haven't covered. `cite42_find_ai_citation_gaps` focuses on questions where AI answers cite competitors but not you.
+`cite42_find_content_opportunities` combines AI answers, keyword demand, Google Trends, Reddit, YouTube and citations in one call to find topics you haven't covered.
 
 ### Can I check AI visibility without a monthly subscription?
 
-Yes. Cite42 charges per call from a prepaid USD balance, and there is no subscription. New accounts get $1 of free credit. Checking your balance, prices and usage is free.
+Yes. Cite42 charges per call from a prepaid USD balance, and there is no subscription. A rankings or citations check costs $0.13 on the three default surfaces (ChatGPT $0.05, Gemini $0.05, Perplexity $0.03) and $0.20 with all five. Failed calls are not charged, and new accounts get $1 of free credit. See [cite42.dev/pricing](https://www.cite42.dev/pricing), or ask your agent to run `cite42_pricing`.
 
-### How much does a check cost?
+### Is there an AI visibility API for developers?
 
-A rankings or citations check costs $0.13 on the three default surfaces (ChatGPT $0.05, Gemini $0.05, Perplexity $0.03) and $0.20 with all five. Failed calls are not charged. Creating or pausing a tracker is free, and each tracker run bills every prompt at the normal price. Ask your agent to run `cite42_pricing` for the current prices of every tool, or see [cite42.dev/pricing](https://www.cite42.dev/pricing).
-
-### Can I build AI visibility checks into my own app?
-
-Yes. The same tools are available as a REST API at the same per-call prices, so you can call them from your own code. See the [REST API docs](https://www.cite42.dev/docs/api).
+Yes. The same tools are available as a REST API at the same per-call prices, so you can build AI visibility checks into your own app. See the [REST API docs](https://www.cite42.dev/docs/api).
 
 ### Are the answers live?
 
@@ -204,10 +200,6 @@ Each answer comes from a real call to that AI model. Cite42 caches answers for 2
 ### Do I need an API key?
 
 Not for the hosted server at `https://mcp.cite42.dev`, where you sign in with your Cite42 account in the browser. You only need a key to run this npm package, for example in CI or on a server without a browser.
-
-### Which AI clients does it work with?
-
-Claude Code, Codex, Cursor, Claude Desktop, Claude.ai and ChatGPT. Other clients that support remote MCP servers with OAuth, or local stdio servers, should work too.
 
 ### Is it open source?
 
