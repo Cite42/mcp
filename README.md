@@ -4,7 +4,7 @@
 [![CI](https://github.com/Cite42/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Cite42/mcp/actions/workflows/ci.yml)
 [![Cite42 MCP connector: tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.cite42/mcp/badges/score.svg)](https://glama.ai/mcp/connectors/dev.cite42/mcp)
 
-Cite42 is an MCP server for AI visibility and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
+Cite42 is an MCP server for AI visibility, also called generative engine optimization (GEO), and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
 
 You pay per call from a prepaid USD balance. There is no subscription, and new accounts get $1 of free credit. See [pricing](https://www.cite42.dev/pricing).
 
