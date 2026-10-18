@@ -4,7 +4,7 @@
 [![CI](https://github.com/Cite42/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Cite42/mcp/actions/workflows/ci.yml)
 [![Cite42 MCP connector: tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.cite42/mcp/badges/score.svg)](https://glama.ai/mcp/connectors/dev.cite42/mcp)
 
-Cite42 is an MCP server for AI visibility, also called generative engine optimization (GEO), and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
+Cite42 is an MCP server for [AI visibility](https://www.cite42.dev/tools/ai-visibility), also called generative engine optimization (GEO), and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
 
 You pay per call from a prepaid USD balance. There is no subscription, and new accounts get $1 of free credit. See [pricing](https://www.cite42.dev/pricing).
 
@@ -12,31 +12,31 @@ You pay per call from a prepaid USD balance. There is no subscription, and new a
 
 ### Check whether AI answers mention your brand
 
-Ask a buyer question such as "best invoicing software for freelancers" and see which brands each AI model names, in what order, and how often (`cite42_rankings`). Compare your brand with named competitors (`cite42_compare`), or see how the answers describe it (`cite42_sentiment`).
+Ask a buyer question such as "best invoicing software for freelancers" and see which brands each AI model names, in what order, and how often ([`cite42_rankings`](https://www.cite42.dev/tools/ai-visibility)). Compare your brand with named competitors ([`cite42_compare`](https://www.cite42.dev/tools/ai-competitors)), or see how the answers describe it ([`cite42_sentiment`](https://www.cite42.dev/tools/ai-sentiment)).
 
 ### See which sources AI answers cite
 
-`cite42_citations` lists the URLs the AI models cited for a question and can check whether your page or domain is among them. For the full text, `cite42_search` returns each model's answer with its sources. `cite42_recommendations` then compares your page with up to two of the cited pages.
+[`cite42_citations`](https://www.cite42.dev/tools/ai-citations) lists the URLs the AI models cited for a question and can check whether your page or domain is among them. For the full text, [`cite42_search`](https://www.cite42.dev/tools/ai-search) returns each model's answer with its sources. `cite42_recommendations` then compares your page with up to two of the cited pages.
 
 ### Keyword search volume, CPC and competition
 
-`cite42_keywords` returns monthly search volume, CPC and competition for a keyword, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call.
+[`cite42_keywords`](https://www.cite42.dev/tools/keyword-research) returns monthly search volume, CPC and competition for a keyword, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call.
 
 ### Google Trends
 
-`cite42_trends` returns Google Trends interest over time, related and rising queries, and a trend label.
+[`cite42_trends`](https://www.cite42.dev/tools/google-trends) returns Google Trends interest over time, related and rising queries, and a trend label.
 
 ### Reddit and YouTube research
 
-`cite42_reddit_trends` finds relevant Reddit discussions with cited summaries. `cite42_youtube_trends` finds rising videos, creator angles and title patterns.
+[`cite42_reddit_trends`](https://www.cite42.dev/tools/reddit-trends) finds relevant Reddit discussions with cited summaries. [`cite42_youtube_trends`](https://www.cite42.dev/tools/youtube-trends) finds rising videos, creator angles and title patterns.
 
 ### Track prompts weekly or monthly
 
-A tracker reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand.
+A [tracker](https://www.cite42.dev/trackers) reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand.
 
 ### Run research workflows in one call
 
-Six workflows combine the tools above: content opportunities, topic demand, AI prompt maps, competitor content, AI citation gaps and content briefs.
+Six [workflows](https://www.cite42.dev/workflows) combine the tools above: content opportunities, topic demand, AI prompt maps, competitor content, AI citation gaps and content briefs.
 
 ## Requirements
 
@@ -159,7 +159,7 @@ That is the three default surfaces; ask for `fullSweep` to add Claude and Google
 
 ### Is there an MCP server for AI visibility?
 
-Yes. AI visibility is how often AI assistants name or cite your brand when people ask about your category, and Cite42 is an MCP server that measures it. Connect it to Claude Code, Codex, Cursor, Claude Desktop, Claude.ai or ChatGPT, and your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, the questions your buyers ask and see which brands and sources come back.
+Yes. AI visibility is how often AI assistants name or cite your brand when people ask about your category, and Cite42 is an [MCP server that measures it](https://www.cite42.dev/tools/ai-visibility). Connect it to Claude Code, Codex, Cursor, Claude Desktop, Claude.ai or ChatGPT, and your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, the questions your buyers ask and see which brands and sources come back.
 
 ### How can I track my brand's visibility in ChatGPT and other AI search engines?
 
