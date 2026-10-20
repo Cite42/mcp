@@ -1,0 +1,19 @@
+{
+  "name": "cite42",
+  "owner": {
+    "name": "Cite42",
+    "email": "support@cite42.dev"
+  },
+  "metadata": {
+    "description": "The Cite42 plugin for Claude Code: AI visibility and SEO data for AI agents."
+  },
+  "plugins": [
+    {
+      "name": "cite42",
+      "source": "./",
+      "description": "AI visibility and SEO data for AI agents. See whether ChatGPT, Claude, Perplexity and Gemini mention your brand and which sources they cite, plus keyword search volume and Google Trends.",
+      "category": "marketing",
+      "homepage": "https://www.cite42.dev/docs"
+    }
+  ]
+}
