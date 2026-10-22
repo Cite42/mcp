@@ -55,14 +55,6 @@ claude mcp add --transport http --scope user cite42 https://mcp.cite42.dev && cl
 
 Your browser opens to sign in. Then start Claude Code, or restart it if it was already open, and check with `/mcp`.
 
-Or install Cite42 as a plugin from inside Claude Code:
-
-```
-/plugin install cite42 --marketplace Cite42/mcp
-```
-
-Claude Code versions before 2.1.275 need two steps: `/plugin marketplace add Cite42/mcp`, then `/plugin install cite42@cite42`. Then open `/mcp`, pick the Cite42 server and sign in.
-
 ### Codex CLI
 
 ```bash
