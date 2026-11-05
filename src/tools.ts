@@ -709,26 +709,55 @@ const trackerCadenceInput = z
  * A tracker is one measurement applied to a list of prompts: the prompt is the only thing that
  * varies between the calls a run makes, so everything else is set once here.
  *
- * MUST stay in sync with `trackerUpsertInput` in
+ * MUST stay in sync with `trackerDefinitionInput` in
  * apps/web/src/shared/lib/tracker/schemas.ts — the hosted API is the validator, and
  * `npx tsx scripts/contracts.ts` asserts these field names match it. Note there is deliberately no
  * `fullSweep`: a saved tracker stores the exact surface list its cost was authorized for.
+ *
+ * A keyword_rankings tracker (since 0.9.3) takes `keywords` for one `domain` instead of `prompts`;
+ * the API refuses a mix, so the package only describes which fields belong to which measurement.
  */
 const trackerPrimitiveInput = z
-  .enum(['rankings', 'compare', 'citations', 'sentiment'])
+  .enum(['rankings', 'compare', 'citations', 'sentiment', 'keyword_rankings'])
   .describe(
-    'What to measure on every prompt: rankings (which brands get named), compare (the brand ' +
-      'against named competitors), citations (which sources are cited), or sentiment (how one ' +
-      'brand is described). One measurement per tracker.'
+    'What to measure: rankings (which brands get named), compare (the brand against named ' +
+      'competitors), citations (which sources are cited) or sentiment (how one brand is described) ' +
+      'run across AI surfaces for every prompt; keyword_rankings checks Google positions of a ' +
+      'domain for every keyword. One measurement per tracker.'
   );
-
 const trackerPromptsInput = z
   .array(queryText('A prompt to run on every scheduled run.'))
-  .min(1)
-  .max(25)
+  .max(30)
+  .nullish()
   .describe(
-    'Prompts to track, up to 30. Each is billed as its own call on every run. Keep the wording ' +
-      'stable so runs stay comparable, avoid dates, and do not repeat a prompt.'
+    'AI measurements: the prompts to track, up to 30. Each is billed as its own call on every ' +
+      'run. Keep the wording stable so runs stay comparable, avoid dates, and do not repeat a ' +
+      'prompt. Not used by keyword_rankings.'
+  );
+const trackerKeywordsInput = z
+  .array(
+    z.object({
+      keyword: z
+        .string()
+        .trim()
+        .min(1)
+        .max(SHORT_TEXT_MAX_CHARS)
+        .describe('A search term as people type it into Google.'),
+      page: z
+        .string()
+        .trim()
+        .min(1)
+        .max(500)
+        .nullish()
+        .describe('Optional page on the site that should rank for it: a full URL or a path such as /pricing.'),
+    })
+  )
+  .min(1)
+  .max(100)
+  .nullish()
+  .describe(
+    'keyword_rankings only: up to 100 keywords, each with an optional target page. Each keyword ' +
+      'is billed as its own check on every run.'
   );
 
 const trackerDefinitionFields = {
@@ -766,21 +795,52 @@ const trackerDefinitionFields = {
       'AI surfaces to query for every prompt. Omit for the three defaults (chatgpt, perplexity, ' +
         'gemini), or list surfaces explicitly to set the recurring cost; chatgpt_app (the ChatGPT ' +
         'app itself) is opt-in. There is no fullSweep here: a saved tracker stores the exact list ' +
-        'it was authorized for.'
+        'it was authorized for. Not used by keyword_rankings.'
     ),
+  keywords: trackerKeywordsInput,
+  domain: z
+    .string()
+    .trim()
+    .min(1)
+    .max(SHORT_TEXT_MAX_CHARS)
+    .nullish()
+    .describe('keyword_rankings only: the site to find in Google results, e.g. example.com.'),
+  country: z
+    .string()
+    .trim()
+    .max(8)
+    .nullish()
+    .describe(
+      'ISO-2 country. keyword_rankings: the Google market, defaults to "us". AI measurements: ' +
+        'optional country to measure from; omit for each surface\'s default. On an update of an ' +
+        'AI tracker, omitting it keeps the stored market and null removes it.'
+    ),
+  language: z
+    .string()
+    .trim()
+    .max(8)
+    .nullish()
+    .describe(
+      'ISO-2 language, defaulting to the country\'s main language. AI measurements use it only ' +
+        'for google_ai_overview and chatgpt_app, and need a country with it.'
+    ),
+  device: z
+    .enum(['desktop', 'mobile'])
+    .nullish()
+    .describe('keyword_rankings only: desktop or mobile results. Defaults to desktop.'),
 };
-
 const TRACKER_BILLING_DESCRIPTION =
   'Managing trackers and reading reports is free; each run bills one call per prompt at the ' +
-  'per-surface rates.';
+  'per-surface rates, or one check per keyword for keyword_rankings.';
 
 export const aivTrackerCreate = createTool({
   id: 'cite42_tracker_create',
   mcp: mutation('Create Cite42 tracker draft'),
   description:
     'Create a draft weekly or monthly tracker: one measurement — rankings, compare, citations, or ' +
-    'sentiment — applied to a list of prompts, with the brand, competitors and AI surfaces set once ' +
-    'for all of them. Prompt lists can come from cite42_map_ai_prompts research. Creation does ' +
+    'sentiment applied to a list of prompts, with the brand, competitors and AI surfaces set once ' +
+    'for all of them, or keyword_rankings applied to a list of keywords for one domain, country ' +
+    'and device. Prompt lists can come from cite42_map_ai_prompts research. Creation does ' +
     'not start recurring calls. ' +
     TRACKER_BILLING_DESCRIPTION,
   inputSchema: z.object(trackerDefinitionFields),
