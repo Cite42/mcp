@@ -4,7 +4,7 @@
 [![CI](https://github.com/Cite42/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Cite42/mcp/actions/workflows/ci.yml)
 [![Cite42 MCP connector: tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/dev.cite42/mcp/badges/score.svg)](https://glama.ai/mcp/connectors/dev.cite42/mcp)
 
-Cite42 is an MCP server for [AI visibility](https://www.cite42.dev/tools/ai-visibility), also called generative engine optimization (GEO), and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also pull keyword search volume, Google Trends, Reddit and YouTube data.
+Cite42 is an MCP server for [AI visibility](https://www.cite42.dev/tools/ai-visibility), also called generative engine optimization (GEO), and SEO data. It works in Claude Code, Codex, Cursor, Claude Desktop and ChatGPT. Your agent can ask the AI models behind ChatGPT, Claude, Perplexity and Gemini, plus Google AI Overviews, a buyer question and see whether the answers mention your brand and which sources they cite. It can also capture the answer from the ChatGPT app itself, measure from a chosen country, check where a site ranks in Google, and pull keyword search volume, Google Trends, Reddit and YouTube data.
 
 You pay per call from a prepaid USD balance. There is no subscription, and new accounts get $1 of free credit. See [pricing](https://www.cite42.dev/pricing).
 
@@ -14,6 +14,12 @@ You pay per call from a prepaid USD balance. There is no subscription, and new a
 
 Ask a buyer question such as "best invoicing software for freelancers" and see which brands each AI model names, in what order, and how often ([`cite42_rankings`](https://www.cite42.dev/tools/ai-visibility)). Compare your brand with named competitors ([`cite42_compare`](https://www.cite42.dev/tools/ai-competitors)), or see how the answers describe it ([`cite42_sentiment`](https://www.cite42.dev/tools/ai-sentiment)).
 
+### Measure the ChatGPT app itself, from any country
+
+The default `chatgpt` surface is the OpenAI API with web search. Add `chatgpt_app` to `models` and Cite42 also asks the question in the ChatGPT app itself and returns what that interface answered. It is opt-in and never part of the defaults or a full sweep, because one capture can take up to two minutes. A single tool call waits 30 seconds for it and then returns the OpenAI API answer in its place, marked `fallback` on the result; trackers wait the full time. The app costs $0.05 per prompt, or $0.07 for sentiment.
+
+Pass `country` (for example `"gb"`) to any AI-model tool to measure from that market. OpenAI, Claude and Perplexity search with it as an approximate location, and Google AI Overviews and the ChatGPT app are read from that country, in its main language or the `language` you pass. Gemini's API has no country setting, so it runs without one. Each surface's `measurement` entry says what it actually used.
+
 ### See which sources AI answers cite
 
 [`cite42_citations`](https://www.cite42.dev/tools/ai-citations) lists the URLs the AI models cited for a question and can check whether your page or domain is among them. For the full text, [`cite42_search`](https://www.cite42.dev/tools/ai-search) returns each model's answer with its sources. `cite42_recommendations` then compares your page with up to two of the cited pages.
@@ -21,6 +27,10 @@ Ask a buyer question such as "best invoicing software for freelancers" and see w
 ### Keyword search volume, CPC and competition
 
 [`cite42_keywords`](https://www.cite42.dev/tools/keyword-research) returns monthly search volume, CPC and competition for a keyword, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call.
+
+### Where a site ranks in Google
+
+[`cite42_keyword_rankings`](https://www.cite42.dev/tools/keyword-rankings) checks Google's top 100 organic results for one to five keywords in one of 40 countries, on desktop or mobile. For each keyword it returns your site's position and ranking page, up to five competitors' positions, the top 10, and whether the AI Overview cites your site. It costs $0.09 per keyword checked, and a keyword that fails is free.
 
 ### Google Trends
 
@@ -32,7 +42,7 @@ Ask a buyer question such as "best invoicing software for freelancers" and see w
 
 ### Track prompts weekly or monthly
 
-A [tracker](https://www.cite42.dev/trackers) reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand.
+A [tracker](https://www.cite42.dev/trackers) reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand. A tracker can include the ChatGPT app and measure every prompt from one country. Through the hosted server, a [keyword rankings tracker](https://www.cite42.dev/trackers/keyword-rankings) checks up to 100 keywords for one site on the same schedule.
 
 ### Run research workflows in one call
 
@@ -138,7 +148,9 @@ After connecting or restarting, just ask in plain language. Your agent picks the
 
 - *"Use Cite42 to check which brands AI models recommend for 'best project management software'."*
 - *"Which sources do AI models cite when asked about CRM tools for startups? Is mycompany.com among them?"*
+- *"Check which brands the ChatGPT app itself names for 'best CRM for startups', measured from Germany."*
 - *"Get search volume, CPC, and related keywords for 'ai seo tools'."*
+- *"Where does mycompany.com rank in Google for 'ai seo tools' and 'geo tools' in the UK, on mobile?"*
 - *"Is interest in 'ai seo' rising on Google Trends? Show the related rising queries."*
 - *"What are people on Reddit complaining about regarding email marketing tools?"*
 - *"Run a content brief for the topic 'ai website builder'."*
@@ -161,7 +173,7 @@ After connecting or restarting, just ask in plain language. Your agent picks the
 >
 > Your domain wasn't cited by any model. FreshBooks is cited mainly via comparison/"best of" listicles. A citation-gap analysis (`cite42_find_ai_citation_gaps`) can show which queries you're missing from.
 
-That is the three default surfaces; ask for `fullSweep` to add Claude and Google AI Overviews. The exact brands and sources change by query and model. A good result should show the tool used, model/source evidence, and a short summary you can act on.
+That is the three default surfaces; ask for `fullSweep` to add Claude and Google AI Overviews, or name `chatgpt_app` to add the ChatGPT app itself. The exact brands and sources change by query and model. A good result should show the tool used, model/source evidence, and a short summary you can act on.
 
 ## FAQ
 
@@ -172,6 +184,14 @@ Yes. AI visibility is how often AI assistants name or cite your brand when peopl
 ### How can I track my brand's visibility in ChatGPT and other AI search engines?
 
 [Connect Cite42](#installation) and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which reports which brands each answer names, in what order and how often. It checks ChatGPT, Perplexity and Gemini by default; ask for a full sweep to add Claude and Google AI Overviews. To follow it over time, a [tracker](#trackers) reruns up to 30 prompts every week or month and keeps the history.
+
+### Does Cite42 read the real ChatGPT app or the OpenAI API?
+
+Both. The default `chatgpt` surface asks the OpenAI API with web search enabled, which is fast and cheap. The opt-in `chatgpt_app` surface asks the question in the ChatGPT app itself and returns what that interface answered, so you can compare the two. It costs $0.05 per prompt and is never part of the defaults or a full sweep. A single call waits 30 seconds for the app and then returns the OpenAI API answer in its place, labelled as a fallback; trackers wait the full capture time.
+
+### Can I measure AI answers from a specific country?
+
+Yes. Pass `country` with an ISO-2 code such as `"gb"` or `"de"` to any AI-model tool or tracker. OpenAI, Claude and Perplexity search from that location, and Google AI Overviews and the ChatGPT app are read from Google in that market. Gemini has no country setting and runs unlocated. The `measurement` block on each result says which location was actually used.
 
 ### How can I see which websites ChatGPT, Claude and Perplexity cite?
 
@@ -184,6 +204,10 @@ Cite42 doesn't change what AI models say, but it shows you where to work. AI ans
 ### Is there an MCP server for keyword research with real search volume?
 
 Yes. Ask your agent for a keyword's search volume and it calls `cite42_keywords`, which returns monthly search volume, CPC and competition, with optional related keyword ideas. `cite42_keywords_batch` checks up to 50 keywords in one call.
+
+### Is there an MCP server for Google rank tracking?
+
+Yes. Ask "Where does example.com rank for 'ai seo tools' in the UK?" and your agent calls `cite42_keyword_rankings`, which checks Google's top 100 for up to five keywords in one of 40 countries and returns the position, the ranking page, competitor positions, the top 10 and whether the AI Overview cites the site. It costs $0.09 per keyword. Through the hosted server, a `keyword_rankings` tracker rechecks up to 100 keywords weekly or monthly.
 
 ### Is there a Google Trends MCP server?
 
@@ -215,7 +239,7 @@ This MCP client is MIT licensed. The data comes from the hosted Cite42 API, whic
 
 ## Tools
 
-Cite42 exposes 29 MCP tools: 4 free account tools (including the compatibility alias), 11 data/report tools, 6 research workflows, and 8 tracker tools.
+Cite42 exposes 30 MCP tools: 4 free account tools (including the compatibility alias), 12 data/report tools, 6 research workflows, and 8 tracker tools.
 
 ### Account & pricing (free)
 
@@ -226,7 +250,7 @@ Cite42 exposes 29 MCP tools: 4 free account tools (including the compatibility a
 
 ### AI search visibility
 
-- `cite42_search`: run a query against ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews. Returns each model's answer plus cited sources.
+- `cite42_search`: run a query against ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews, plus the ChatGPT app itself (`chatgpt_app`) when you ask for it, optionally from one `country`. Returns each model's answer plus cited sources.
 - `cite42_citations`: aggregate which URLs the AI models cite for a query. Can also check whether a specific URL is cited.
 - `cite42_rankings`: measure how brands rank in AI answers, including mention rate, average position, and per-model breakdown.
 - `cite42_compare`: compare one brand against competitors in AI answers.
@@ -237,6 +261,7 @@ Cite42 exposes 29 MCP tools: 4 free account tools (including the compatibility a
 
 - `cite42_keywords`: get seed search volume, CPC, and competition, with optional related keyword ideas.
 - `cite42_keywords_batch`: check volume, CPC, and competition for two to 50 seed keywords in one request; billed by outcome (call `cite42_pricing` for rates).
+- `cite42_keyword_rankings`: where a site ranks in Google's top 100 for one to five keywords in one country, desktop or mobile: position, ranking URL, competitor positions, the top 10 and whether the AI Overview cites the site. $0.09 per keyword checked; a keyword that fails is free.
 - `cite42_trends`: get Google Trends interest over time, related and rising queries, and a trend label.
 - `cite42_reddit_trends`: find relevant Reddit discussions with cited summaries and read up to three pages through Gemini URL context. Returns page titles, authors, post excerpts, relative ages, available scores/comment counts and sampled human comments. Pages may be cached and model extraction is not independently verified. Exact dates, growth and quote-based insight arrays remain unavailable. Read `relevantThreads`; `risingThreads` is a deprecated compatibility alias. Check `coverage` and `warnings` for missing fields and out-of-window threads.
 - `cite42_youtube_trends`: find YouTube rising videos, creator angles, title patterns, and opportunities.
@@ -252,7 +277,7 @@ Cite42 exposes 29 MCP tools: 4 free account tools (including the compatibility a
 
 ### Trackers
 
-- `cite42_tracker_create`: create a draft weekly or monthly tracker — one measurement applied to a list of prompts. No prompt list yet? Run `cite42_map_ai_prompts` first. Creating a draft is free and does not schedule calls.
+- `cite42_tracker_create`: create a draft weekly or monthly tracker — one measurement applied to a list of prompts, with the AI surfaces (including `chatgpt_app`) set once for all of them. No prompt list yet? Run `cite42_map_ai_prompts` first. Creating a draft is free and does not schedule calls. The hosted server also accepts `primitive: "keyword_rankings"` with up to 100 keywords for one site, and a `country` for AI trackers; this npm package creates AI trackers without a country.
 - `cite42_tracker_update`: replace the whole tracker definition — name, cadence, measurement, prompts and configuration. A tracker read returns the same shape, so read it, change what you need, and send it back. Updating is free.
 - `cite42_tracker_activate`: activate or resume recurring runs. You must pass the exact `estimatedCostMicroPerRun` from the latest tracker record as `maxCostMicroPerRun`; activation authorizes billed scheduled runs until the tracker is paused. The response carries the balance, the cost per run and `runsDryAt` — the date the balance stops covering your active trackers — and activation is refused when the balance cannot cover even the next run. When tracker emails are on, activation also sends a setup summary.
 - `cite42_tracker_pause`: stop future scheduled runs while preserving configuration and history. Pausing is free.
@@ -332,7 +357,7 @@ the same immediate predecessor as tracker reports.
 Citation groups preserve the original watched URL; normalized identities are only used for matching.
 Counts sum distinct prompts: four prompts × five surfaces can supply 20 answers. Comparisons require
 the complete prompt/configuration set, methodology and complete coverage to match the preceding run.
-Individual prompts remain small samples (at most five surfaces); percentage-point changes are withheld
+Individual prompts remain small samples (at most six surfaces); percentage-point changes are withheld
 below 10 answers per group in each run. This guardrail does not establish statistical significance.
 
 `cite42_recommendations` is a separate, optional report. With no saved result, `url` alone runs a free
