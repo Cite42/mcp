@@ -17,7 +17,9 @@ import {
 // MUST stay in sync with MODEL_IDS in apps/web/src/mastra/model-ids.ts — the hosted API rejects
 // any model not in this set. `google_ai_overview` is the AI summary block in Google's SERP
 // (sourced from a SERP read, not an LLM), a peer model the API fans out to like the rest.
-const modelEnum = z.enum(['chatgpt', 'claude', 'perplexity', 'gemini', 'google_ai_overview']);
+// `chatgpt_app` is the ChatGPT app itself, captured from its web interface: opt-in and never in a
+// sweep. A single call waits 30 s for it and then gets the OpenAI API answer, labelled as such.
+const modelEnum = z.enum(['chatgpt', 'claude', 'perplexity', 'gemini', 'google_ai_overview', 'chatgpt_app']);
 const QUERY_MAX_CHARS = 2_000;
 const SHORT_TEXT_MAX_CHARS = 200;
 const TIMEFRAME_MAX_CHARS = 80;
@@ -25,7 +27,9 @@ const TIMEFRAME_MAX_CHARS = 80;
 const MODEL_SELECTION_DESCRIPTION =
   'AI surfaces to query, each billed separately; pass a subset when the user names surfaces or ' +
   'wants a lower cost. Omit for the defaults (chatgpt, perplexity, gemini); fullSweep queries ' +
-  'all five. google_ai_overview accepts queries up to 700 characters, the others 2000.';
+  'all five. google_ai_overview accepts queries up to 700 characters, the others 2000. ' +
+  'chatgpt_app (answers captured from the ChatGPT app itself) is opt-in and slower: a single call ' +
+  'waits 30 s for it, then returns the OpenAI API answer in its place, labelled in measurement.';
 
 const FULL_SWEEP_DESCRIPTION =
   'Query all five AI surfaces (adds claude and google_ai_overview) for full cross-surface ' +
@@ -167,6 +171,36 @@ const modelsInput = z
 
 const fullSweepInput = z.boolean().optional().describe(FULL_SWEEP_DESCRIPTION);
 
+/**
+ * The AI-measurement `country` and `language` inputs, on MCP since 0.9.0 after the directory-review
+ * hold. Mirrors `AI_MARKETS_ON_MCP` in apps/web/src/shared/lib/ai-market-release.ts;
+ * `scripts/contracts.ts` fails if they differ.
+ */
+export const AI_MARKETS_ENABLED = true;
+
+const aiMarketInput = AI_MARKETS_ENABLED
+  ? {
+      country: z
+        .string()
+        .trim()
+        .max(8)
+        .optional()
+        .describe(
+          'Optional ISO-2 country to measure from, e.g. "gb". Omit for each surface\'s default. ' +
+            'Gemini has no country setting and ignores it.'
+        ),
+      language: z
+        .string()
+        .trim()
+        .max(8)
+        .optional()
+        .describe(
+          'Optional ISO-2 language for google_ai_overview and chatgpt_app, which read in it. Needs country; ' +
+            'defaults to the country\'s main language.'
+        ),
+    }
+  : {};
+
 const competitorList = z
   .array(shortText('Competitor brand/domain name.'))
   .nonempty()
@@ -251,6 +285,7 @@ export const aivSearch = createTool({
     query: queryText('The concise AI-search/market-research query to run against the selected models.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/search', input),
 });
@@ -269,6 +304,7 @@ export const aivCitations = createTool({
     url: z.string().trim().max(500).optional().describe('Optional URL to check whether it was cited.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/citations', input),
 });
@@ -285,6 +321,7 @@ export const aivRankings = createTool({
     competitors: competitorList.describe('Brand or domain names to track within the AI-generated answers.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/rankings', input),
 });
@@ -306,6 +343,7 @@ export const aivCompare = createTool({
       .describe('Competitor brand/domain names (up to 10) to rank against your brand.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/compare', input),
 });
@@ -322,6 +360,7 @@ export const aivSentiment = createTool({
     brand: shortText('The brand to score sentiment for in each model answer.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/sentiment', input),
 });
@@ -377,6 +416,42 @@ export const aivKeywordsBatch = createTool({
       .describe('Optional ISO-2 language code.'),
   }),
   execute: async (input) => aivPost('/keywords/batch', input),
+});
+
+/**
+ * Keyword Rankings, on MCP since 0.9.0 after the directory-review hold. Mirrors
+ * `KEYWORD_RANKINGS_ON_MCP` in apps/web/src/shared/lib/keyword-rankings-release.ts;
+ * `scripts/contracts.ts` fails if they differ.
+ */
+export const KEYWORD_RANKINGS_TOOLS_ENABLED = true;
+
+export const aivKeywordRankings = createTool({
+  id: 'cite42_keyword_rankings',
+  mcp: readOnly('Get Google keyword rankings'),
+  description:
+    'Where a site ranks in Google organic results (top 100) for one to five keywords in one ' +
+    'country, desktop or mobile: position, ranking URL, competitor positions, the top 10 and ' +
+    'whether the AI Overview cites the site. Billed per keyword checked; a keyword that fails is ' +
+    `free. Each check is one live sample. ${PAID_TOOL_BILLING}`,
+  inputSchema: z.object({
+    keywords: z.array(z.string().trim().min(1).max(200)).min(1).max(5).refine(
+      (keywords) => new Set(keywords.map((keyword) => keyword.toLowerCase().replace(/\s+/g, ' '))).size === keywords.length,
+      'Keywords must be distinct.'
+    ).describe('One to five distinct search terms, as people type them into Google. Each is billed separately.'),
+    domain: z.string().trim().max(253).optional()
+      .describe('Your site, e.g. example.com. Covers www and subdomains. Omit to get only the top results.'),
+    url: z.string().trim().max(500).optional()
+      .describe('Optional page that should rank, as a full URL or a path such as /pricing.'),
+    competitors: z.array(z.string().trim().min(1).max(253)).max(5).optional()
+      .describe('Up to 5 competitor domains to report positions for.'),
+    country: z.string().trim().max(8).optional()
+      .describe('ISO-2 country code of the Google market to check. Defaults to "us".'),
+    language: z.string().trim().max(8).optional()
+      .describe('Optional ISO-2 language code. Defaults to the country\'s main language.'),
+    device: z.enum(['desktop', 'mobile']).optional()
+      .describe('Desktop or mobile results. Defaults to desktop.'),
+  }),
+  execute: async (input) => aivPost('/keywords/rankings', input),
 });
 
 export const aivTrends = createTool({
@@ -689,7 +764,9 @@ const trackerDefinitionFields = {
     .nullish()
     .describe(
       'AI surfaces to query for every prompt. Omit for the three defaults (chatgpt, perplexity, ' +
-        'gemini), or list surfaces explicitly — including all five — to fix the recurring cost.'
+        'gemini), or list surfaces explicitly to set the recurring cost; chatgpt_app (the ChatGPT ' +
+        'app itself) is opt-in. There is no fullSweep here: a saved tracker stores the exact list ' +
+        'it was authorized for.'
     ),
 };
 
