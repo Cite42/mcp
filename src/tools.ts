@@ -17,23 +17,33 @@ import {
 // MUST stay in sync with MODEL_IDS in apps/web/src/mastra/model-ids.ts — the hosted API rejects
 // any model not in this set. `google_ai_overview` is the AI summary block in Google's SERP
 // (sourced from a SERP read, not an LLM), a peer model the API fans out to like the rest.
-// `chatgpt_app` is the ChatGPT app itself, captured from its web interface: opt-in and never in a
-// sweep. A single call waits 30 s for it and then gets the OpenAI API answer, labelled as such.
-const modelEnum = z.enum(['chatgpt', 'claude', 'perplexity', 'gemini', 'google_ai_overview', 'chatgpt_app']);
+// `chatgpt_app` is ChatGPT itself, captured from its web interface: opt-in, never in a sweep, and
+// only on the per-model tools. If it does not answer in time, it has no result and is not charged.
+const workflowModelEnum = z.enum(['chatgpt', 'claude', 'perplexity', 'gemini', 'google_ai_overview']);
+const modelEnum = z.enum([...workflowModelEnum.options, 'chatgpt_app']);
 const QUERY_MAX_CHARS = 2_000;
 const SHORT_TEXT_MAX_CHARS = 200;
 const TIMEFRAME_MAX_CHARS = 80;
-// These two repeat on every model-backed tool in tools/list, so they stay short.
+// These repeat on every model-backed tool in tools/list, so they stay short. Mirrors
+// apps/web/src/mastra/tools/schemas.ts: the reviewed text, plus ChatGPT itself on the per-model
+// tools, where "all models" has to reach it because fullSweep stays the five standard surfaces.
 const MODEL_SELECTION_DESCRIPTION =
   'AI surfaces to query, each billed separately; pass a subset when the user names surfaces or ' +
-  'wants a lower cost. Omit for the defaults (chatgpt, perplexity, gemini); fullSweep queries ' +
-  'all five. google_ai_overview accepts queries up to 700 characters, the others 2000. ' +
-  'chatgpt_app (answers captured from the ChatGPT app itself) is opt-in and slower: a single call ' +
-  'waits 30 s for it, then returns the OpenAI API answer in its place, labelled in measurement.';
+  'wants a lower cost. Omit for the defaults (chatgpt = the OpenAI API, perplexity, gemini); fullSweep queries ' +
+  'all five. google_ai_overview accepts queries up to 700 characters, the others 2000.';
+
+const SURFACE_SELECTION_DESCRIPTION =
+  MODEL_SELECTION_DESCRIPTION +
+  ' chatgpt_app (ChatGPT itself, captured from its web interface) is opt-in and not in fullSweep; for every ' +
+  'surface, list all six. It answers more slowly; if it does not answer in time, it has no result and is not charged.';
 
 const FULL_SWEEP_DESCRIPTION =
   'Query all five AI surfaces (adds claude and google_ai_overview) for full cross-surface ' +
   'coverage, at a higher cost. Ignored when models is given.';
+
+const SURFACE_FULL_SWEEP_DESCRIPTION =
+  'Query the five standard AI surfaces (adds claude and google_ai_overview) at a higher cost. It leaves out ' +
+  'chatgpt_app, so list all six in models for every surface. Ignored when models is given.';
 
 /**
  * Mirrors the hosted server's billing sentence (apps/web/src/app/mcp/route.ts) — keep the two in
@@ -43,9 +53,9 @@ const FULL_SWEEP_DESCRIPTION =
  * without per-call confirmation.
  */
 const PAID_TOOL_BILLING =
-  'Billed in USD (result field cite42Billing) to the user\'s prepaid Cite42 balance; exact prices ' +
-  'from cite42_pricing (free). For plans over 20 calls or $5, estimate the cost and confirm with ' +
-  'the user first.';
+  'Billed in USD (result field cite42Billing) to the user\'s prepaid Cite42 balance, and failed calls ' +
+  'are free; exact prices from cite42_pricing (free). For plans over 20 calls or $5, estimate the cost ' +
+  'and confirm with the user first.';
 
 /** "When the user asks" keeps the pointer from inviting a paid report after every measurement. */
 const RECOMMENDATIONS_INPUT_NOTE =
@@ -62,7 +72,7 @@ const KEYWORDS_PRICING =
   'Billed by outcome: cheapest when the seed has no search volume, more when it has metrics, ' +
   'most with ideas:true.';
 
-const WORKFLOW_PRICING = 'Billed for the steps that succeed, at per-surface rates.';
+const WORKFLOW_PRICING = 'Charged only for the steps that succeed, at per-surface rates.';
 
 /** Matches `workflowToolDescription()` on the hosted server. */
 function workflowDescription(description: string): string {
@@ -163,13 +173,23 @@ function optionalShortText(description: string) {
   return z.string().trim().min(1).max(SHORT_TEXT_MAX_CHARS).optional().describe(description);
 }
 
+/** The workflows run under a 45 s budget a ChatGPT capture cannot fit, so they take the five. */
 const modelsInput = z
-  .array(modelEnum)
+  .array(workflowModelEnum)
   .nonempty()
   .optional()
   .describe(MODEL_SELECTION_DESCRIPTION);
 
 const fullSweepInput = z.boolean().optional().describe(FULL_SWEEP_DESCRIPTION);
+
+/** Every surface, ChatGPT itself included, for the per-model tools. */
+const surfaceModelsInput = z
+  .array(modelEnum)
+  .nonempty()
+  .optional()
+  .describe(SURFACE_SELECTION_DESCRIPTION);
+
+const surfaceFullSweepInput = z.boolean().optional().describe(SURFACE_FULL_SWEEP_DESCRIPTION);
 
 /**
  * The AI-measurement `country` and `language` inputs, on MCP since 0.9.0 after the directory-review
@@ -224,16 +244,6 @@ export const aivBalance = createTool({
   execute: fetchBalance,
 });
 
-// Kept by name so older integrations that call it keep working; it answers exactly like
-// cite42_balance now that credits are retired.
-export const aivCredits = createTool({
-  id: 'cite42_credits',
-  mcp: readOnly('Check Cite42 balance (legacy alias)', false),
-  description: 'Alias of cite42_balance for older integrations. Free.',
-  inputSchema: z.object({}),
-  execute: fetchBalance,
-});
-
 export const aivPricing = createTool({
   id: 'cite42_pricing',
   mcp: readOnly('Get Cite42 price table', false),
@@ -278,13 +288,14 @@ export const aivSearch = createTool({
   id: 'cite42_search',
   mcp: readOnly('Search AI models'),
   description:
-    'Run a query against AI models (ChatGPT, Claude, Perplexity, Gemini, and Google AI ' +
-    "Overviews) and return each model's answer along with the sources it cited. " +
+    'Run a query against AI models (OpenAI, Claude, Perplexity, Gemini, Google AI Overviews, ' +
+    "and ChatGPT itself on request) and return each model's answer along with the sources it cited. " +
+    'Google organic search positions are provided by cite42_keyword_rankings, not this AI-answer search. ' +
     `${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     query: queryText('The concise AI-search/market-research query to run against the selected models.'),
-    models: modelsInput,
-    fullSweep: fullSweepInput,
+    models: surfaceModelsInput,
+    fullSweep: surfaceFullSweepInput,
     ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/search', input),
@@ -294,16 +305,15 @@ export const aivCitations = createTool({
   id: 'cite42_citations',
   mcp: readOnly('Find AI citations'),
   description:
-    "Find which sources a model's web search surfaces for a query. Aggregates cited URLs " +
-    'across models with per-model counts; optionally checks whether a specific URL is cited. ' +
-    'Measures the retrieval corpus behind a prompt — which domains own your category in AI ' +
-    'search, and where your content is missing — not the citation links a consumer chat UI ' +
-    `renders for a logged-in user. ${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
+    "Find which sources AI answers cite for a query, including ChatGPT itself on request. Aggregates " +
+    'cited URLs across models with per-model counts; optionally checks whether a specific URL is cited. ' +
+    'Shows which domains own your category in AI search and where your content is missing. ' +
+    `${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     query: queryText('The concise query to look up cited sources for.'),
     url: z.string().trim().max(500).optional().describe('Optional URL to check whether it was cited.'),
-    models: modelsInput,
-    fullSweep: fullSweepInput,
+    models: surfaceModelsInput,
+    fullSweep: surfaceFullSweepInput,
     ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/citations', input),
@@ -314,13 +324,14 @@ export const aivRankings = createTool({
   mcp: readOnly('Measure AI brand rankings'),
   description:
     'Measure how a set of brands/competitors rank in AI answers for a query: mention rate, ' +
-    'average position, and a per-model breakdown across ChatGPT, Claude, Perplexity, Gemini, ' +
-    `and Google AI Overviews. ${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
+    'average position, and a per-model breakdown across OpenAI, Claude, Perplexity, Gemini, ' +
+    'Google AI Overviews, and ChatGPT itself on request. Google organic search positions are provided by cite42_keyword_rankings, ' +
+    `not this AI-answer measurement. ${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     query: queryText('The concise query to measure brand/competitor visibility on.'),
     competitors: competitorList.describe('Brand or domain names to track within the AI-generated answers.'),
-    models: modelsInput,
-    fullSweep: fullSweepInput,
+    models: surfaceModelsInput,
+    fullSweep: surfaceFullSweepInput,
     ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/rankings', input),
@@ -330,8 +341,8 @@ export const aivCompare = createTool({
   id: 'cite42_compare',
   mcp: readOnly('Compare brand against competitors'),
   description:
-    'Compare one primary brand head-to-head against a competitor set in AI answers: per-brand ' +
-    'rankings plus a co-mention graph of which brands the models name together. ' +
+    'Compare one primary brand head-to-head against a competitor set in AI answers, ChatGPT itself ' +
+    'included on request: per-brand rankings plus a co-mention graph of which brands the models name together. ' +
     `${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     query: queryText('The concise query to compare the brand and competitors on.'),
@@ -341,8 +352,8 @@ export const aivCompare = createTool({
       .nonempty()
       .max(10)
       .describe('Competitor brand/domain names (up to 10) to rank against your brand.'),
-    models: modelsInput,
-    fullSweep: fullSweepInput,
+    models: surfaceModelsInput,
+    fullSweep: surfaceFullSweepInput,
     ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/compare', input),
@@ -352,14 +363,14 @@ export const aivSentiment = createTool({
   id: 'cite42_sentiment',
   mcp: readOnly('Score brand sentiment in AI answers'),
   description:
-    'Score how each AI model talks about a brand for a query: a positive/neutral/negative split ' +
+    'Score how each AI model, and ChatGPT itself on request, talks about a brand for a query: a positive/neutral/negative split ' +
     'per model with the verbatim phrases driving the tone, plus an aggregate across models. ' +
     `${RECOMMENDATIONS_INPUT_NOTE} ${MODEL_PRICING} ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     query: queryText('The concise query whose answers are scored for brand sentiment.'),
     brand: shortText('The brand to score sentiment for in each model answer.'),
-    models: modelsInput,
-    fullSweep: fullSweepInput,
+    models: surfaceModelsInput,
+    fullSweep: surfaceFullSweepInput,
     ...aiMarketInput,
   }),
   execute: async (input) => aivPost('/sentiment', input),
@@ -432,7 +443,9 @@ export const aivKeywordRankings = createTool({
     'Where a site ranks in Google organic results (top 100) for one to five keywords in one ' +
     'country, desktop or mobile: position, ranking URL, competitor positions, the top 10 and ' +
     'whether the AI Overview cites the site. Billed per keyword checked; a keyword that fails is ' +
-    `free. Each check is one live sample. ${PAID_TOOL_BILLING}`,
+    'free. Each check is one live sample. ' +
+    'This is the Google Search/SERP rank check, including for keywords about AI visibility, MCP or APIs; ' +
+    `brand mentions inside AI-generated answers are measured by cite42_rankings. ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     keywords: z.array(z.string().trim().min(1).max(200)).min(1).max(5).refine(
       (keywords) => new Set(keywords.map((keyword) => keyword.toLowerCase().replace(/\s+/g, ' '))).size === keywords.length,
@@ -482,11 +495,10 @@ export const aivRedditTrends = createTool({
   id: 'cite42_reddit_trends',
   mcp: readOnly('Find Reddit discussions'),
   description:
-    'Discover relevant Reddit discussions with Google Search and read up to three thread pages through Gemini URL context. ' +
-    'Returns Gemini-read titles, authors, post excerpts, relative ages, available scores/comment counts and sampled human comments, ' +
-    'plus cited model summaries. Check coverage and warnings: pages may be cached, extraction is not independently verified, ' +
-    'and exact dates, growth and quote-based insights are unavailable. risingThreads is a deprecated alias of relevantThreads. ' +
-    PAID_TOOL_BILLING,
+    // Mirrors REDDIT_MAX_THREADS and REDDIT_MAX_PAGES_READ in apps/web/src/mastra.
+    'Find relevant Reddit discussions for a topic: up to 15 threads with summaries, subreddits and links, ' +
+    '3 of them read in full for the post text, author, age, score, comment count and sampled comments. ' +
+    `coverage and warnings report anything that could not be read. ${PAID_TOOL_BILLING}`,
   inputSchema: z.object({
     topic: queryText('Topic, category, product, or audience to research on Reddit.'),
     subreddits: z.array(shortText('Subreddit name without r/.')).max(20).optional().describe('Optional subreddit names, without r/.'),
@@ -526,8 +538,9 @@ export const aivFindContentOpportunities = createTool({
   mcp: readOnly('Find content opportunities'),
   description:
     workflowDescription(
-      'Run the content-opportunities workflow: fans out across AI search, SEO keywords, trends, ' +
-        'Reddit, YouTube, and citations and returns the aggregated data in one response.'
+      'Find what to write next (content gaps): topics with search demand or audience questions that AI answers cover ' +
+        'poorly. Returns AI answers, citations, keyword ideas, trends, Reddit and YouTube data; channels limits the ' +
+        'sources. To brief one topic, use cite42_generate_content_brief.'
     ),
   inputSchema: z.object({
     topic: queryText('Market, niche, product category, or audience to research.'),
@@ -547,8 +560,8 @@ export const aivAnalyzeTopicDemand = createTool({
   mcp: readOnly('Analyze topic demand'),
   description:
     workflowDescription(
-      'Run the topic-demand workflow: SEO keyword data, Google Trends, AI answers, and audience ' +
-        'conversations, aggregated in one response.'
+      'Check the demand for one topic: search volume and related keywords, Google Trends direction, AI answers and ' +
+        'Reddit discussion. To find topics, use cite42_find_content_opportunities.'
     ),
   inputSchema: z.object({
     topic: queryText('Topic, keyword, category, or audience demand to analyze.'),
@@ -565,9 +578,8 @@ export const aivMapAiPrompts = createTool({
   mcp: readOnly('Map buyer prompts for AI search'),
   description:
     workflowDescription(
-      'Run the AI-prompt-map workflow: research for a list of buyer prompts worth tracking, from AI ' +
-        'search, SEO demand, trends, citations, Reddit, and YouTube data. It returns evidence and a ' +
-        'suggested prompt, not a finished list; prompts written from it can be tracked with ' +
+      'Find which buyer prompts to track in AI search. Returns the data to write that list from (search demand, ' +
+        'trends, AI answers, citations, Reddit and YouTube wording), not a finished list. Track the chosen prompts with ' +
         'cite42_tracker_create.'
     ),
   inputSchema: z.object({
@@ -588,8 +600,8 @@ export const aivAnalyzeCompetitorContent = createTool({
   mcp: readOnly('Analyze competitor content'),
   description:
     workflowDescription(
-      'Run the competitor-content workflow: AI rankings, head-to-head comparison, citations, keyword ' +
-        'demand, and topic coverage, aggregated in one response.'
+      'See how competitors show up in AI answers for a topic: their rankings, a head-to-head against your brand, the ' +
+        'sources AI cites and keyword demand. For cited pages that name them but not you, use cite42_find_ai_citation_gaps.'
     ),
   inputSchema: z.object({
     competitors: competitorList.describe('Competitor brands, domains, or channels to analyze.'),
@@ -607,16 +619,22 @@ export const aivFindAiCitationGaps = createTool({
   mcp: readOnly('Find AI citation gaps'),
   description:
     workflowDescription(
-      'Run the AI-citation-gaps workflow: find queries where AI answers cite others but not your ' +
-        'brand, domain, or URL, with the supporting data.'
+      'Find where to get mentioned: the pages AI answers cite for a buyer question that name your competitors but not ' +
+        'you. Measures citations and rankings, reads up to 8 cited third-party pages and returns gaps.pages, each with ' +
+        'the names it contains, an excerpt and an action. With requestId or trackerRunId instead of query, it measures ' +
+        'nothing and is free.'
     ),
   inputSchema: z.object({
-    query: queryText('AI-search query to inspect for citation gaps.'),
-    brand: shortText('Brand or domain that should earn citations.'),
-    url: z.string().trim().max(500).optional().describe('Optional exact URL to check for citations.'),
-    competitors: competitorList.optional().describe('Competitor brands/domains.'),
+    query: queryText('Buyer question to measure. With requestId or trackerRunId, optionally one of the saved prompts to focus on.').optional(),
+    brand: shortText('Your brand or domain: the name to look for on the cited pages. A domain also marks your own pages.'),
+    url: z.string().trim().max(500).optional().describe('Optional URL of your page: checked for citations, and its site counts as yours.'),
+    competitors: competitorList.optional().describe('Competitor brands/domains to look for on the cited pages.'),
     models: modelsInput,
     fullSweep: fullSweepInput,
+    requestId: z.string().trim().min(1).max(128).optional()
+      .describe('A requestId from your own successful citations, rankings or workflow call within 30 days. Free.'),
+    trackerRunId: z.string().trim().min(1).max(128).optional()
+      .describe('A finished run of one of your trackers within 30 days. Free.'),
   }),
   execute: async (input, context) => aivPost('/workflows/ai-citation-gaps', input, context?.abortSignal ?? context?.mcp?.extra.signal),
 });
@@ -626,9 +644,8 @@ export const aivGenerateContentBrief = createTool({
   mcp: readOnly('Generate content brief data'),
   description:
     workflowDescription(
-      'Run the content-brief workflow: research for a content brief from AI answers, citations, SEO ' +
-        'keyword demand, trends, Reddit, and YouTube signals. It returns evidence and a suggested ' +
-        'prompt; write the brief from it.'
+      'Research one topic for a content brief: what AI answers say and cite, target keywords, trend direction, and ' +
+        'Reddit and YouTube discussion. Returns the data and a suggested prompt; write the brief from it.'
     ),
   inputSchema: z.object({
     topic: queryText('Topic, keyword, or content idea to brief.'),
@@ -792,9 +809,9 @@ const trackerDefinitionFields = {
     .nonempty()
     .nullish()
     .describe(
-      'AI surfaces to query for every prompt. Omit for the three defaults (chatgpt, perplexity, ' +
-        'gemini), or list surfaces explicitly to set the recurring cost; chatgpt_app (the ChatGPT ' +
-        'app itself) is opt-in. There is no fullSweep here: a saved tracker stores the exact list ' +
+      'AI surfaces to query for every prompt. Omit for the three defaults (chatgpt = the OpenAI API, ' +
+        'perplexity, gemini), or list surfaces explicitly to set the recurring cost; chatgpt_app (ChatGPT ' +
+        'itself, captured from its web interface) is opt-in. There is no fullSweep here: a saved tracker stores the exact list ' +
         'it was authorized for. Not used by keyword_rankings.'
     ),
   keywords: trackerKeywordsInput,

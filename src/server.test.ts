@@ -99,6 +99,24 @@ describe('workflow model selection', () => {
 });
 
 describe('tools/list', () => {
+  it('distinguishes Google organic positions from rankings and searches inside AI answers', async () => {
+    const client = await connectedClient();
+    try {
+      const { tools } = await client.listTools();
+      const google = tools.find((tool) => tool.name === 'cite42_keyword_rankings')!;
+      expect(google.description).toContain('Google Search/SERP');
+      expect(google.inputSchema.required).toContain('keywords');
+      expect(google.inputSchema.properties).toHaveProperty('domain');
+      for (const name of ['cite42_rankings', 'cite42_search']) {
+        const tool = tools.find((tool) => tool.name === name)!;
+        expect(tool.description).toContain('cite42_keyword_rankings');
+        expect(tool.inputSchema.required).toContain('query');
+      }
+    } finally {
+      await client.close();
+    }
+  });
+
   it('points the prompt map and the tracker at each other', async () => {
     // An agent only chains these two if the descriptions say they connect: map_ai_prompts returns
     // prompts and tracker_create consumes them, and nothing else in the protocol conveys that.
@@ -144,6 +162,22 @@ describe('tools/list', () => {
 });
 
 describe('tools/call — REST forwarding', () => {
+  it('forwards Google rankings for AI-related keywords to the SERP endpoint', async () => {
+    const input = { domain: 'cite42.dev', keywords: ['ai visibility mcp', 'ai visibility api'], country: 'gb' };
+    fetchMock.mockResolvedValue(restResponse({ domain: input.domain, results: [] }));
+    const client = await connectedClient();
+    try {
+      const result = await client.callTool({ name: 'cite42_keyword_rankings', arguments: input });
+      expect(result.isError ?? false).toBe(false);
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe('https://www.cite42.dev/api/v1/keywords/rankings');
+      expect(JSON.parse(init.body as string)).toEqual(input);
+    } finally {
+      await client.close();
+    }
+  });
+
 
   it('forwards saved-result recommendations and preserves request IDs, metrics and exact billing', async () => {
     const metrics = [{ evidenceId: 'saved-result', values: { checkedAnswers: 3 } }];
@@ -247,11 +281,18 @@ describe('tools/call — REST forwarding', () => {
     expect(JSON.parse(init.body as string)).toEqual({ query: 'best crm', models: ['claude'] });
   });
 
-  it('serves the legacy cite42_credits alias from GET /v1/usage in USD only', async () => {
+  it('tells the agent up front that ChatGPT itself is read from its web interface', async () => {
+    const client = await connectedClient();
+    expect(client.getInstructions()).toContain('ChatGPT itself is read from its web interface');
+    const { tools } = await client.listTools();
+    expect(tools.map((tool) => tool.name)).not.toContain('cite42_credits');
+  });
+
+  it('serves cite42_balance from GET /v1/usage in USD only', async () => {
     fetchMock.mockResolvedValue(restResponse({ balance: { microCredits: 123_000 } }));
 
     const client = await connectedClient();
-    const result = (await client.callTool({ name: 'cite42_credits', arguments: {} })) as ToolResult;
+    const result = (await client.callTool({ name: 'cite42_balance', arguments: {} })) as ToolResult;
 
     expect(result.isError ?? false).toBe(false);
     expect(parseToolResult(result)).toEqual({

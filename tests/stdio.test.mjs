@@ -50,7 +50,9 @@ test('built executable initializes, discovers tools, forwards credentials, and s
   assert.equal(client.getServerVersion()?.version, version);
 
   const { tools } = await client.listTools();
-  for (const name of ['cite42_balance', 'cite42_credits', 'cite42_search', 'cite42_recommendations', 'cite42_tracker_create']) {
+  assert.match(client.getInstructions() ?? '', /ChatGPT itself is read from its web interface/);
+  assert.ok(!tools.some((tool) => tool.name === 'cite42_credits'), 'The retired cite42_credits alias is listed');
+  for (const name of ['cite42_balance', 'cite42_search', 'cite42_recommendations', 'cite42_tracker_create']) {
     assert.ok(tools.some((tool) => tool.name === name), `Missing ${name}`);
   }
   for (const tool of tools) {
@@ -59,26 +61,20 @@ test('built executable initializes, discovers tools, forwards credentials, and s
   }
   assert.equal(requests.length, 0, 'Discovery must not call the REST API');
 
-  const balance = await client.callTool({ name: 'cite42_credits', arguments: {} });
-  assert.notEqual(balance.isError, true);
-  const payload = balance.structuredContent ?? JSON.parse(balance.content.find((item) => item.type === 'text').text);
-  // The legacy alias answers in USD only, exactly like cite42_balance.
-  assert.equal(payload.cite42Credits, undefined);
-  assert.equal(payload.cite42Billing.remainingUsd, '1.23');
   const usdBalance = await client.callTool({ name: 'cite42_balance', arguments: {} });
   const usdPayload = JSON.parse(usdBalance.content[0].text);
   assert.equal(usdPayload.cite42Billing.currency, 'USD');
   assert.equal(usdPayload.cite42Billing.remainingUsd, '1.23');
   assert.equal(usdPayload.cite42Credits, undefined);
-  assert.deepEqual(requests, Array.from({ length: 2 }, () => ({
+  assert.deepEqual(requests, Array.from({ length: 1 }, () => ({
     method: 'GET', url: '/api/v1/usage', authorization: `Bearer ${fakeKey}`,
   })));
 
   revoked = true;
-  const denied = await client.callTool({ name: 'cite42_credits', arguments: {} });
+  const denied = await client.callTool({ name: 'cite42_balance', arguments: {} });
   assert.equal(denied.isError, true);
   assert.match(JSON.stringify(denied.content), /401/);
-  assert.equal(requests.length, 3);
+  assert.equal(requests.length, 2);
   assert.ok((await client.listTools()).tools.length > 0, 'Auth errors must not kill the server');
 });
 
