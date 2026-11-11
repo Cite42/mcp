@@ -668,7 +668,12 @@ const trackerIdInput = z
 
 const trackerCadenceInput = z
   .object({
-    frequency: z.enum(['weekly', 'monthly']),
+    frequency: z
+      .enum(['daily', 'weekly', 'monthly'])
+      .describe(
+        'How often the tracker runs. daily needs no day field; weekly needs weekday; monthly ' +
+          'needs monthday.'
+      ),
     timezone: z
       .string()
       .trim()
@@ -854,7 +859,7 @@ export const aivTrackerCreate = createTool({
   id: 'cite42_tracker_create',
   mcp: mutation('Create Cite42 tracker draft'),
   description:
-    'Create a draft weekly or monthly tracker: one measurement — rankings, compare, citations, or ' +
+    'Create a draft daily, weekly or monthly tracker: one measurement — rankings, compare, citations, or ' +
     'sentiment applied to a list of prompts, with the brand, competitors and AI surfaces set once ' +
     'for all of them, or keyword_rankings applied to a list of keywords for one domain, country ' +
     'and device. Prompt lists can come from cite42_map_ai_prompts research. Creation does ' +
@@ -884,10 +889,12 @@ export const aivTrackerActivate = createTool({
     idempotentHint: true,
   }),
   description:
-    'Activate or resume recurring weekly or monthly tool calls. maxCostMicroPerRun must equal ' +
+    'Activate or resume recurring daily, weekly or monthly tool calls. maxCostMicroPerRun must equal ' +
     'the tracker\'s latest estimatedCostMicroPerRun; activation authorizes future billed calls ' +
     'until paused. The response includes the balance, the cost per run, and runsDryAt, the date ' +
-    'the balance stops covering active trackers. When tracker emails are enabled, activation ' +
+    'the balance stops covering active trackers, and estimatedOverWeeklySpendLimit, true when ' +
+    'active trackers are estimated to average more than the account\'s rolling seven-day spend ' +
+    'limit; tell the user, because runs that reach it pause. When tracker emails are enabled, activation ' +
     'sends a setup summary and every completed run sends current results and suggested next ' +
     'steps, even when nothing changed. Activation is refused when the balance cannot cover the ' +
     `next run. ${TRACKER_BILLING_DESCRIPTION}`,

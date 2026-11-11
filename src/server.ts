@@ -78,7 +78,7 @@ export const CITE42_MCP_INSTRUCTIONS =
   'from its web interface (models: chatgpt_app) and Google AI Overviews from live Google results; ' +
   'OpenAI (chatgpt), Claude, Gemini and Perplexity are queried through their official APIs with web ' +
   'search. Each result\'s measurement block states how every surface was reached. Cite42 also returns ' +
-  'Google rankings, keyword volume, Google Trends, Reddit and YouTube data, and runs weekly or monthly ' +
+  'Google rankings, keyword volume, Google Trends, Reddit and YouTube data, and runs daily, weekly or monthly ' +
   'trackers. Calls are billed per use in USD from a prepaid balance, failed calls are free, and ' +
   'cite42_pricing lists every price for free.';
 

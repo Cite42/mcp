@@ -342,6 +342,31 @@ describe('tools/call — REST forwarding', () => {
     });
   });
 
+  it('forwards a daily tracker draft, which needs no weekday or monthday', async () => {
+    fetchMock.mockResolvedValue(
+      restResponse({ tracker: { id: 'tracker_2', status: 'DRAFT' } })
+    );
+
+    const client = await connectedClient();
+    const result = (await client.callTool({
+      name: 'cite42_tracker_create',
+      arguments: {
+        name: 'Daily rank check',
+        cadence: { frequency: 'daily', timezone: 'Europe/London', time: '07:30' },
+        primitive: 'rankings',
+        competitors: ['Acme'],
+        models: ['chatgpt'],
+        prompts: ['best CRM for startups'],
+      },
+    })) as ToolResult;
+
+    expect(result.isError ?? false).toBe(false);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      cadence: { frequency: 'daily', timezone: 'Europe/London', time: '07:30' },
+    });
+  });
+
   it('forwards permanent tracker deletion to DELETE without a body', async () => {
     fetchMock.mockResolvedValue(
       restResponse({ deleted: true, trackerId: 'tracker_1' })

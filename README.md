@@ -40,9 +40,9 @@ Pass `country` (for example `"gb"`) to any AI-model tool to measure from that ma
 
 [`cite42_reddit_trends`](https://www.cite42.dev/tools/reddit-trends) finds relevant Reddit discussions with cited summaries. [`cite42_youtube_trends`](https://www.cite42.dev/tools/youtube-trends) finds rising videos, creator angles and title patterns.
 
-### Track prompts weekly or monthly
+### Track prompts daily, weekly or monthly
 
-A [tracker](https://www.cite42.dev/trackers) reruns up to 30 prompts every week or month and keeps the history, so you can see when AI answers start or stop naming your brand. A tracker can include ChatGPT itself and measure every prompt from one country. Your agent can create, start, pause and delete trackers, run one on demand, and read its results and changes, all from the chat. A [keyword rankings tracker](https://www.cite42.dev/trackers/keyword-rankings) checks up to 100 keywords for one site on the same schedule.
+A [tracker](https://www.cite42.dev/trackers) reruns up to 30 prompts every day, week or month and keeps the history, so you can see when AI answers start or stop naming your brand. A tracker can include ChatGPT itself and measure every prompt from one country. Your agent can create, start, pause and delete trackers, run one on demand, and read its results and changes, all from the chat. A [keyword rankings tracker](https://www.cite42.dev/trackers/keyword-rankings) checks up to 100 keywords for one site on the same schedule.
 
 ### Run research workflows in one call
 
@@ -183,7 +183,7 @@ Yes. AI visibility is how often AI assistants name or cite your brand when peopl
 
 ### How can I track my brand's visibility in ChatGPT and other AI search engines?
 
-[Connect Cite42](#installation) and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which reports which brands each answer names, in what order and how often. It checks ChatGPT, Perplexity and Gemini by default; ask for a full sweep to add Claude and Google AI Overviews. To follow it over time, a [tracker](#trackers) reruns up to 30 prompts every week or month and keeps the history.
+[Connect Cite42](#installation) and ask something like "Use Cite42 to check which brands AI models recommend for 'best CRM for startups'." Your agent calls `cite42_rankings`, which reports which brands each answer names, in what order and how often. It checks ChatGPT, Perplexity and Gemini by default; ask for a full sweep to add Claude and Google AI Overviews. To follow it over time, a [tracker](#trackers) reruns up to 30 prompts every day, week or month and keeps the history.
 
 ### Does Cite42 read the real ChatGPT or the OpenAI API?
 
@@ -207,7 +207,7 @@ Yes. Ask your agent for a keyword's search volume and it calls `cite42_keywords`
 
 ### Is there an MCP server for Google rank tracking?
 
-Yes. Ask "Where does example.com rank for 'ai seo tools' in the UK?" and your agent calls `cite42_keyword_rankings`, which checks Google's top 100 for up to five keywords in one of 40 countries and returns the position, the ranking page, competitor positions, the top 10 and whether the AI Overview cites the site. It costs $0.09 per keyword. A `keyword_rankings` tracker rechecks up to 100 keywords weekly or monthly.
+Yes. Ask "Where does example.com rank for 'ai seo tools' in the UK?" and your agent calls `cite42_keyword_rankings`, which checks Google's top 100 for up to five keywords in one of 40 countries and returns the position, the ranking page, competitor positions, the top 10 and whether the AI Overview cites the site. It costs $0.09 per keyword. A `keyword_rankings` tracker rechecks up to 100 keywords daily, weekly or monthly.
 
 ### Is there a Google Trends MCP server?
 
@@ -276,7 +276,7 @@ Cite42 exposes 29 MCP tools: 3 free account tools, 12 data/report tools, 6 resea
 
 ### Trackers
 
-- `cite42_tracker_create`: create a draft weekly or monthly tracker — one measurement applied to a list of prompts, with the AI surfaces (including `chatgpt_app`) set once for all of them. No prompt list yet? Run `cite42_map_ai_prompts` first. Creating a draft is free and does not schedule calls. Set `primitive` to `keyword_rankings` with up to 100 `keywords` for one `domain` to track Google positions instead, and `country` to measure an AI tracker from one market.
+- `cite42_tracker_create`: create a draft daily, weekly or monthly tracker — one measurement applied to a list of prompts, with the AI surfaces (including `chatgpt_app`) set once for all of them. No prompt list yet? Run `cite42_map_ai_prompts` first. Creating a draft is free and does not schedule calls. Set `primitive` to `keyword_rankings` with up to 100 `keywords` for one `domain` to track Google positions instead, and `country` to measure an AI tracker from one market.
 - `cite42_tracker_update`: replace the whole tracker definition — name, cadence, measurement, prompts and configuration. A tracker read returns the same shape, so read it, change what you need, and send it back. Updating is free.
 - `cite42_tracker_activate`: activate or resume recurring runs. You must pass the exact `estimatedCostMicroPerRun` from the latest tracker record as `maxCostMicroPerRun`; activation authorizes billed scheduled runs until the tracker is paused. The response carries the balance, the cost per run and `runsDryAt` — the date the balance stops covering your active trackers — and activation is refused when the balance cannot cover even the next run. When tracker emails are on, activation also sends a setup summary.
 - `cite42_tracker_pause`: stop future scheduled runs while preserving configuration and history. Pausing is free.
